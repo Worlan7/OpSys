@@ -99,28 +99,62 @@ int main(int argc, char **argv)
     char c;
     char cmdline[MAXLINE];
     int emit_prompt = 1; /* emit prompt (default) */
-
+    int display_command, exit_status, debug_level, running;
     /* Redirect stderr to stdout (so that driver will get all output
      * on the pipe connected to stdout) */
     dup2(1, 2);
 
     /* Parse the command line */
-    while ((c = getopt(argc, argv, "hvp")) != EOF) {
-        switch (c) {
-        case 'h':             /* print help message */
-            usage();
-        break;
-        case 'v':             /* emit additional diagnostic info */
-            verbose = 1;
-        break;
-        case 'p':             /* don't print a prompt */
-            emit_prompt = 0;  /* handy for automatic testing */
-        break;
-    default:
-            usage();
-    }
-    }
+//    while ((c = getopt(argc, argv, "hvp")) != EOF) {
+//        switch (c) {
+//        case 'h':             /* print help message */
+//            usage();
+//        break;
+//        case 'v':             /* emit additional diagnostic info */
+//            verbose = 1;
+ //       break;
+ //       case 'p':             /* don't print a prompt */
+  //          emit_prompt = 0;  /* handy for automatic testing */
+   //     break;
+   // default:
+   //         usage();
+    //}
+    //}
 
+ /* Parse the command line */
+    while ((c = getopt(argc, argv, "xd:f:")) != EOF) 
+    {
+        switch (c) {
+        case 'x':             /* print command line */
+            display_command = 1;
+        break;
+        case 'd':             /* emit additional diagnostic info */
+            if(isdigit(optarg[0])){
+                debug_level = atoi(optarg);
+            }else{
+                usage();
+                abort();
+            }
+        break;
+        case 'f':             /* Run script from file*/
+            emit_prompt = 0; 
+        break;
+        case '?':
+        if (optopt == 'd' || optopt == 'f')
+          fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+        else if (isprint (optopt))
+          fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+        else
+          fprintf (stderr,
+                   "Unknown option character `\\x%x'.\n",
+                   optopt);
+        running = 0;
+        exit_status = -1;
+        default:
+            usage();
+            abort();
+        }
+    }
     /* Install the signal handlers */
 
     /* These are the ones you will need to implement */
@@ -252,7 +286,8 @@ int parseline(const char *cmdline, char **argv)
     int bg;                     /* background job? */
 
     strcpy(buf, cmdline);
-    buf[strlen(buf)-1] = ' ';  /* replace trailing '\n' with space */
+    buf[strlen(
+     buf)-1] = ' ';  /* replace trailing '\n' with space */
     while (*buf && (*buf == ' ')) /* ignore leading spaces */
     buf++;
 
