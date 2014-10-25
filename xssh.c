@@ -73,7 +73,6 @@ int main(int argc, char **argv)
                         printf("The file name is invalid.\n");
                         running = 0;
                         exit_status = -1;
-                        abort();
                     } 
                     else 
                     {
@@ -136,7 +135,8 @@ int main(int argc, char **argv)
         }
        
        /** TODO: Modify adding to history if input is repeat **/
-        add_history(input);
+        if (strcmp(input, "repeat") != 0) 
+            add_history(input);
         
         words = eval(input, &i);
         if (pipe_flag)
@@ -150,14 +150,6 @@ int main(int argc, char **argv)
         }
         
     }
-
-    for (j = 0; j < i; j++) 
-    {
-        free(words[i]);
-    }
-
-    free(words);
-    free(input);
 
     return exit_status;     
 }

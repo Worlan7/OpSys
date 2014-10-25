@@ -1,78 +1,85 @@
-#include <stdio.h>     /* for printf */
-#include <stdlib.h>    /* for exit */
-#include <getopt.h>
+#include <stdio.h>
+#include <readline/history.h>
 
-int
-main(int argc, char **argv)
+main (argc, argv)
+     int argc;
+     char **argv;
 {
-    int c;
-    int digit_optind = 0;
+  char line[1024], *t;
+  int len, done = 0;
 
-   while (1) {
-        int this_option_optind = optind ? optind : 1;
-        int option_index = 0;
-        static struct option long_options[] = {
-            {"add",     required_argument, 0,  0 },
-            {"append",  no_argument,       0,  0 },
-            {"delete",  required_argument, 0,  0 },
-            {"verbose", no_argument,       0,  0 },
-            {"create",  required_argument, 0, 'c'},
-            {"file",    required_argument, 0,  0 },
-            {0,         0,                 0,  0 }
-        };
+  line[0] = 0;
 
-       c = getopt_long(argc, argv, "abc:d:012",
-                 long_options, &option_index);
-        if (c == -1)
-            break;
+  using_history ();
+  while (!done)
+    {
+      printf ("history$ ");
+      fflush (stdout);
+      t = fgets (line, sizeof (line) - 1, stdin);
+      if (t && *t)
+        {
+          len = strlen (t);
+          if (t[len - 1] == '\n')
+            t[len - 1] = '\0';
+        }
 
-       switch (c) {
-        case 0:
-            printf("option %s", long_options[option_index].name);
-            if (optarg)
-                printf(" with arg %s", optarg);
-            printf("\n");
-            break;
+      if (!t)
+        strcpy (line, "quit");
 
-       case '0':
-        case '1':
-        case '2':
-            if (digit_optind != 0 && digit_optind != this_option_optind)
-              printf("digits occur in two different argv-elements.\n");
-            digit_optind = this_option_optind;
-            printf("option %c\n", c);
-            break;
+      if (line[0])
+        {
+          char *expansion;
+          int result;
 
-       case 'a':
-            printf("option a\n");
-            break;
+          result = history_expand (line, &expansion);
+          if (result)
+            fprintf (stderr, "%s\n", expansion);
 
-       case 'b':
-            printf("option b\n");
-            break;
+          if (result < 0 || result == 2)
+            {
+              free (expansion);
+              continue;
+            }
 
-       case 'c':
-            printf("option c with value '%s'\n", optarg);
-            break;
+          add_history (expansion);
+          strncpy (line, expansion, sizeof (line) - 1);
+          free (expansion);
+        }
 
-       case 'd':
-            printf("option d with value '%s'\n", optarg);
-            break;
+      if (strcmp (line, "quit") == 0)
+        done = 1;
+      else if (strcmp (line, "save") == 0)
+        write_history ("history_file");
+      else if (strcmp (line, "read") == 0)
+        read_history ("history_file");
+      else if (strcmp (line, "list") == 0)
+        {
+          register HIST_ENTRY **the_list;
+          register int i;
 
-       case '?':
-            break;
-
-       default:
-            printf("?? getopt returned character code 0%o ??\n", c);
+          the_list = history_list ();
+          if (the_list)
+            for (i = 0; the_list[i]; i++)
+              printf ("%d: %s\n", i + history_base, the_list[i]->line);
+        }
+      else if (strncmp (line, "delete", 6) == 0)
+        {
+          int which;
+          if ((sscanf (line + 6, "%d", &which)) == 1)
+            {
+              HIST_ENTRY *entry = remove_history (which);
+              if (!entry)
+                fprintf (stderr, "No such entry %d\n", which);
+              else
+                {
+                  free (entry->line);
+                  free (entry);
+                }
+            }
+          else
+            {
+              fprintf (stderr, "non-numeric arg given to `delete'\n");
+            }
         }
     }
-
-   if (optind < argc) {
-        printf("non-option ARGV-elements: ");
-        while (optind < argc)
-            printf("%s ", argv[optind++]);
-        printf("\n");
-    }
-
-   exit(EXIT_SUCCESS);
 }

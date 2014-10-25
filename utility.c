@@ -25,6 +25,19 @@ void init_env()
      *  $!: the PID of the last dispatched background command   
      */
     
+    /* Initialising local variables*/
+    int i;
+    variables = malloc(sizeof(variable)*100);
+	for (i = 0; i < 100; ++i) {
+		variables[i].empty = 1;
+	}
+
+	/* Install the signal handlers */
+    Signal(SIGINT,  sigint_handler);   /* ctrl-c */
+    /*Signal(SIGTSTP, sigtstp_handler);  /* ctrl-z 
+    Signal(SIGCHLD, sigchld_handler);  /* Terminated or stopped child*/ 
+
+	/* Storing shell variables*/
     char instance_pid[50], last_exit_status[50], last_bg_pid[50];
     sprintf(instance_pid, "%d", getpid());
     setenv("$", instance_pid, 1);
@@ -160,6 +173,8 @@ int run_cmd(int argc, char *argv[])
 				cmd_exit_status = atoi(argv[1]);
 			} 
 		}
+		sprintf(msg, "Program exited with exit status %d\n", cmd_exit_status);
+		printf("%s", msg);
 		exit_status = cmd_exit_status;
 		return 0;
 	}
@@ -173,14 +188,24 @@ int run_cmd(int argc, char *argv[])
     	/* echo: print all the words after the echo/show command. */
         cmd_exit_status = echo(argv);
     } 
-    else if ((strcmp(argv[0], "chdir") == 0)) 
-    {
-    	/* change the working directory.*/
-		cmd_exit_status = change_directory(argc, argv);
-	} 
+    else if (strcmp(argv[0], "environ") == 0) 
+	{
+        /* Display all defined environment strings.*/
+        cmd_exit_status = print_environ();
+    } 
+    else if (strcmp(argv[0], "export") == 0) 
+	{
+        /* Export variable with the given value.*/
+        cmd_exit_status = export_var(argc, argv);
+    } 
+	else if (strcmp(argv[0], "unexport") == 0) 
+	{
+        /* Unexport variable*/
+        cmd_exit_status = unexport_var(argc, argv);
+    } 
 	else if (strcmp(argv[0], "set") == 0) 
 	{
-        /* Set variable by the given value.*/
+        /* Set variable with given value.*/
         cmd_exit_status = set_var(argc, argv);
     } 
     else if (strcmp(argv[0], "unset") == 0) 
@@ -188,10 +213,51 @@ int run_cmd(int argc, char *argv[])
 		/* do unset */
 		cmd_exit_status = unset_var(argc, argv);
 	} 
-    else if (strcmp(argv[0], "environ") == 0) 
+	else if ((strcmp(argv[0], "dir") == 0)) 
+    {
+    	/* list the working directory.*/
+		cmd_exit_status = list_directory(argc, argv);
+	} 
+    else if ((strcmp(argv[0], "chdir") == 0)) 
+    {
+    	/* change the working directory.*/
+		cmd_exit_status = change_directory(argc, argv);
+	}   
+	else if ((strcmp(argv[0], "history") == 0)) 
+    {
+    	/* show history of commands.*/
+		cmd_exit_status = show_history(argc, argv);
+	}   
+	else if ((strcmp(argv[0], "repeat") == 0)) 
+    {
+    	/* repeat previously executed command*/
+		cmd_exit_status = repeat_cmd(argc, argv);
+	}  
+	else if ((strcmp(argv[0], "kill") == 0)) 
+    {
+    	/* send signal to process.*/
+    	if(argc == 2)
+    	{
+    		cmd_exit_status = kill_cmd(SIGTERM, (pid_t) atoi(argv[1]));
+    	}
+    	else if(argc == 3)
+    	{
+    		char* c = "-";
+    		if((strchr(argv[1], *c)))
+    		{
+    			int sig = atoi(strtok(argv[1], "-"));
+    			cmd_exit_status = kill_cmd(sig, (pid_t) atoi(argv[2]));
+    		}
+    	}
+    	else
+    	{
+    		debug_message("usage: kill [-s signal_name] pid ...");
+    	}
+	}  
+    else if (strcmp(argv[0], "pause") == 0) 
 	{
         /* Display all defined environment strings.*/
-        cmd_exit_status = print_environ();
+        cmd_exit_status = pause_cmd();
     } 
     else if (strcmp(argv[0], "wait") == 0) 
     { 
@@ -205,6 +271,11 @@ int run_cmd(int argc, char *argv[])
         	cmd_exit_status = wait_cmd((pid_t) atoi(argv[1]));
 		}
 	} 
+	else if ((strcmp(argv[0], "help") == 0)) 
+    {
+    	/* change the working directory.*/
+		cmd_exit_status = show_help(argc, argv);
+	}  
 	else 
 	{
 		/* Command not found. Look for external command to run. */
@@ -383,7 +454,7 @@ int run_file_script(FILE *script)
 
 char** var_substitute(char** argv, int argc)
 {
-	int i;
+	int i, local = 0;
 	char* ptr;
 	for (i = 0; i < argc; i ++) 
 	{
@@ -392,9 +463,25 @@ char** var_substitute(char** argv, int argc)
 			ptr = argv[i];
 			ptr ++;				
 			
+			/* If not shell variable*/
 			if ((argv[i] = getenv(ptr)) == NULL) 
 			{
-				printf("There is no environment value for variable %s.\n", ptr);
+				/* check if local variable*/
+
+				int j;
+				for(j = 0; j < 100; ++j)
+				{
+					if(!variables[j].empty)
+					{
+						if(!strcmp(ptr, variables[j].key)){
+							argv[i] = variables[j].value;
+							local = 1;
+						}
+					}
+				}
+				/* Else not found */
+				if(!local)
+					printf("There is no value for variable %s.\n", ptr);
 			}
 		}
 	}
@@ -416,6 +503,17 @@ void debug_message(char* message)
  * Builtin command routines
  *****************************/
 
+int clr(){
+	
+	char buf[1024];
+	char *str;
+
+	tgetent(buf, getenv("TERM"));
+	str = tgetstr("cl", NULL);
+	fputs(str, stdout);
+	return 0;
+}
+
 
 int echo(char* argv[])
 {
@@ -429,47 +527,6 @@ int echo(char* argv[])
 	return 0;
 }
 
-int clr(){
-	
-	char buf[1024];
-	char *str;
-
-	tgetent(buf, getenv("TERM"));
-	str = tgetstr("cl", NULL);
-	fputs(str, stdout);
-	return 0;
-}
-
-
-int wait_cmd(pid_t pid)
-{
-	return 0;
-}
-
-
-int set_var(int argc, char* argv[])
-{
-	return 0;
-}
-
-
-int unset_var(int argc, char* argv[])
-{
-	return 0;
-}
-
-
-int export_var()
-{
-
-}
-
-
-int unexport_var()
-{
-
-}
-
 
 int print_environ()
 {
@@ -478,6 +535,122 @@ int print_environ()
 	{
         printf("%s\n", environ[i++]);
     }
+}
+
+
+int export_var(int argc, char* argv[])
+{
+	int i = 0;
+	char msg[50];
+	if(argc != 3){
+		debug_message("Wrong arguments");
+		return -1;
+	}
+	setenv(argv[1], argv[2], 1);    
+	sprintf(msg, "Exported variable %s with value %s", argv[1], argv[2]);
+	debug_message(msg);
+
+	return 1;
+}
+
+
+int unexport_var(int argc, char* argv[])
+{
+	int error;
+	int i = 0;
+	char msg[50];
+	if(argc != 2){
+		debug_message("Wrong arguments");
+		return -1;
+	}
+	error = unsetenv(argv[1]);    
+	if (error == -1) 
+	{
+		debug_message("Unset failed because of an error with unsetenv()");
+		perror("Unset");
+		return 1;
+	}
+	sprintf(msg, "Unexported variable %s", argv[1]);
+	debug_message(msg);
+
+	return 1;
+}
+
+
+int set_var(int argc, char* argv[])
+{
+	if(argc != 3){
+		debug_message("Wrong arguments");
+		return -1;
+	}
+	int i = 0;
+	int lastEmpty = 0;
+	int exists = 0;
+
+	for (i = 0; i < 100; ++i) 
+	{
+		if (variables[i].empty) 
+		{
+			lastEmpty = i;
+		} 
+		else
+		{
+			/*If already exists, replace value */
+			if (!strcmp(variables[i].key, argv[1])) 
+			{
+				strncpy(variables[i].value, argv[2], 100);
+				variables[i].empty = 0;
+				exists = 1;
+				break;
+			} 
+		}
+	}
+	/*Else create new value at last available empty position*/
+	if (!exists) 
+	{
+		strncpy(variables[lastEmpty].key, argv[1], 100);
+		strncpy(variables[lastEmpty].value, argv[2], 100);
+		variables[lastEmpty].empty = 0;
+	}
+	return 1;
+}
+
+
+int unset_var(int argc, char* argv[])
+{
+	if(argc != 2)
+	{
+		debug_message("Wrong arguments");
+		return -1;
+	}
+
+	int i = 0;
+	for (i = 0; i < 100; ++i) 
+	{
+		if (!strcmp(variables[i].key, argv[1])) 
+		{
+			variables[i].empty = 1;
+			break;
+		}
+	}
+	return 1;
+}
+
+
+int list_directory(int argc, char* argv[])
+{
+	DIR *d;
+ 	struct dirent *dir;
+  	d = opendir(".");
+	if (d)
+	{
+		while ((dir = readdir(d)) != NULL)
+	    {
+	      printf("%s\n", dir->d_name);
+	    }
+	    closedir(d);
+	  }
+	  return 0;
 }
 
 
@@ -512,3 +685,217 @@ int change_directory(int argc, char* argv[])
 	chdir(getenv("PWD"));
 	return 0;
 }
+
+
+int show_history(int argc, char* argv[])
+{
+	if(argc > 2)
+	{
+		debug_message("Wrong history arguments");
+		return -1;
+	}
+	int i = 0;
+	int n = 0;
+	if(argc == 2)
+		n = atoi(argv[1]);
+	const char *history_line;
+
+	while(history_get(i) != NULL)
+	{
+		i++;
+	}
+
+	if(n > i || argc == 1)
+	{
+		int k = 0;
+		while(history_get(k) != NULL)
+		{
+			int j = k + 1;
+			history_line = history_get(k)->line;
+			printf("%d  %s \n", j, (history_line));
+			k++;
+		}
+	}
+	else
+	{
+		int k = i - n;
+		while(history_get(k) != NULL)
+		{
+			int j = k + 1;
+			history_line = history_get(k)->line;
+			printf("%d  %s \n", j, (history_line));
+			k++;
+		}
+	}
+	return 0;
+}
+
+
+int repeat_cmd(int argc, char* argv[])
+{
+	int i = 0;
+	while(history_get(i) != NULL)
+	{
+		i++;
+	}
+
+	const char *repeated_cmd;
+	if(argc == 1)
+	{
+		repeated_cmd = current_history()->line;
+	}
+	else if(argc == 2)
+	{
+		int cmd = atoi(argv[1]);
+		if(cmd >= i)
+		{
+			debug_message("Number given to repeat too high");
+		}
+		else
+		{
+			repeated_cmd = history_get(cmd - 1)->line;
+		}
+	}
+	else
+	{
+		debug_message("Wrong number of arguments");		
+		return -1;
+	}
+
+	if(repeated_cmd)
+	{
+		int size;
+		char* command = strdup(repeated_cmd);
+		char **args = eval(command, &size);
+		return run_cmd(size, args);
+	}
+	else
+	{
+		debug_message("Error repeating command");
+		return -1;
+	}
+	return 0;
+}
+
+
+int kill_cmd(int sig, pid_t pid)
+{
+	kill(pid, sig);
+	return 0;
+}
+
+
+int pause_cmd()
+{
+	int ch;
+	printf ("Paused. Press enter to continue...");
+	while ((ch = getchar()) != '\n' && ch != EOF);
+}
+
+
+int wait_cmd(pid_t pid)
+{
+	int status, error, i, is_valid_pid;
+	if (pid == -1 )
+	{
+		wait(NULL);
+	} 
+	else 
+	{
+		for (i = 0; i < child_count; i++) 
+		{
+			if (child_pids[i] == pid) 
+			{
+				is_valid_pid = 1;
+				break;
+			}
+		}
+		
+		if (is_valid_pid) 
+		{
+			debug_message("Waiting on child process");
+			error = waitpid(pid, &status, 0);
+		
+			if (error == -1) 
+			{
+				perror("waitpid");
+			}
+			
+			is_valid_pid = 0;
+			
+			for (i = 0; i < child_count; i++) 
+			{
+				if (child_pids[i] == pid) 
+				{
+					is_valid_pid = 1;
+				}
+				if (is_valid_pid && i < (child_count - 1)) 
+				{
+					child_pids[i] = child_pids[i + 1];
+				}
+			}
+			
+			child_count--;
+			child_cap = child_count == 0 ? 1 : child_count;
+			
+			child_pids = realloc(child_pids, child_cap * sizeof(pid_t));
+			if (child_pids == NULL) 
+			{
+				debug_message("Error reallocating child_pids");
+				exit(-1);
+			}
+		}
+		return 1;
+	}
+	
+	return 1;
+}
+
+
+int show_help(int argc, char* argv[]){
+	return 0;
+}
+
+
+
+/*****************************
+ * Signal Handling
+ *****************************/
+
+
+void sigchld_handler(int sig)
+{
+	return;
+}
+
+
+void sigtstp_handler(int sig)
+{
+	return;
+}
+
+void sigint_handler(int sig)
+{
+	return;
+}
+
+
+/*
+ * Signal - wrapper for the sigaction function
+ */
+handler_t *Signal(int signum, handler_t *handler) 
+{
+    struct sigaction action, old_action;
+
+    action.sa_handler = handler;  
+    sigemptyset(&action.sa_mask); /* block sigs of type being handled */
+    action.sa_flags = SA_RESTART; /* restart syscalls if possible */
+
+    if (sigaction(signum, &action, &old_action) < 0)
+    	debug_message("Signal error");
+    return (old_action.sa_handler);
+}
+
+
+
+

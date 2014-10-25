@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <dirent.h> 
 #include <termcap.h>
 #include <readline/readline.h>
 #include <readline/history.h>
@@ -64,6 +65,9 @@ typedef struct variable
 	int empty;
 }variable;
 
+/* Local var storage*/
+variable * variables;
+
 /* End global variables */
 
 
@@ -82,18 +86,34 @@ void debug_message(char* message);
  * Builtin command routines
  *****************************/
 
-int echo(char* argv[]);
 int clr();
-int wait_cmd(pid_t pid);
+int echo(char* argv[]);
+int print_environ();
+int export_var(int argc, char* argv[]);
+int unexport_var(int argc, char* argv[]);
 int set_var(int argc, char* argv[]);
 int unset_var(int argc, char* argv[]);
-int export_var();
-int unexport_var();
-int print_environ();
+int list_directory(int argc, char* argv[]);
 int change_directory(int argc, char* argv[]);
+int show_history(int argc, char* argv[]);
+int repeat_cmd(int argc, char* argv[]);
+int kill_cmd(int sig, pid_t pid);
+int pause_cmd();
+int wait_cmd(pid_t pid);
+int show_help(int argc, char* argv[]);
 
 
+/*****************************
+ * Signal Handling
+ *****************************/
+ 
+void sigchld_handler(int sig);
+void sigtstp_handler(int sig);
+void sigint_handler(int sig);
 
+typedef void handler_t(int);
+handler_t *Signal(int signum, handler_t *handler);
 
 
 #endif
+
