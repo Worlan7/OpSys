@@ -1,1 +1,2 @@
-bat 
+Command: echo bat in a hat 
+bat in a hat 

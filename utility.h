@@ -55,6 +55,8 @@ pid_t *child_pids, child_count;
 int child_cap;              
 /* PID of last background command ($!) */
 pid_t background_pid;   
+/*PID of last foreground command */
+pid_t fg_pid;
 
 /*struct that stores local variables for the shell*/
 
@@ -107,9 +109,7 @@ int show_help(int argc, char* argv[]);
  * Signal Handling
  *****************************/
  
-void sigchld_handler(int sig);
-void sigtstp_handler(int sig);
-void sigint_handler(int sig);
+void sig_handler(int sig);
 
 typedef void handler_t(int);
 handler_t *Signal(int signum, handler_t *handler);

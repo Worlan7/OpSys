@@ -33,9 +33,11 @@ void init_env()
 	}
 
 	/* Install the signal handlers */
-    Signal(SIGINT,  sigint_handler);   /* ctrl-c */
-    /*Signal(SIGTSTP, sigtstp_handler);  /* ctrl-z 
-    Signal(SIGCHLD, sigchld_handler);  /* Terminated or stopped child*/ 
+    Signal(SIGINT,  sig_handler);   /* ctrl-c */
+    Signal(SIGQUIT, sig_handler);
+    Signal(SIGTSTP, sig_handler);  /* ctrl-\ */ 
+    Signal(SIGCONT, sig_handler);
+    /*Signal(SIGCHLD, sigchld_handler);  /* Terminated or stopped child*/ 
 
 	/* Storing shell variables*/
     char instance_pid[50], last_exit_status[50], last_bg_pid[50];
@@ -337,6 +339,7 @@ int run_external_cmd(char *argv[])
 			} 
 			else 
 			{
+				fg_pid = child_pid;
 				debug_message("Running command in foreground");
 				wait(&child_status);
 			}
@@ -750,6 +753,7 @@ int repeat_cmd(int argc, char* argv[])
 		if(cmd >= i)
 		{
 			debug_message("Number given to repeat too high");
+			return -1;
 		}
 		else
 		{
@@ -863,19 +867,11 @@ int show_help(int argc, char* argv[]){
  *****************************/
 
 
-void sigchld_handler(int sig)
+void sig_handler(int sig)
 {
-	return;
-}
-
-
-void sigtstp_handler(int sig)
-{
-	return;
-}
-
-void sigint_handler(int sig)
-{
+	if (!background) {
+		kill(fg_pid, SIGINT);
+	}
 	return;
 }
 
