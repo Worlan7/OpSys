@@ -57,6 +57,8 @@ int child_cap;
 pid_t background_pid;   
 /*PID of last foreground command */
 pid_t fg_pid;
+sigset_t mask;          /*used to block signals*/
+
 
 /*struct that stores local variables for the shell*/
 
@@ -110,6 +112,7 @@ int show_help(int argc, char* argv[]);
  *****************************/
  
 void sig_handler(int sig);
+void sigchld_handler(int sig);
 
 typedef void handler_t(int);
 handler_t *Signal(int signum, handler_t *handler);

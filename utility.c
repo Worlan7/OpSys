@@ -37,7 +37,7 @@ void init_env()
     Signal(SIGQUIT, sig_handler);
     Signal(SIGTSTP, sig_handler);  /* ctrl-\ */ 
     Signal(SIGCONT, sig_handler);
-    /*Signal(SIGCHLD, sigchld_handler);  /* Terminated or stopped child*/ 
+    Signal(SIGCHLD, sigchld_handler);  /* Terminated or stopped child*/ 
 
 	/* Storing shell variables*/
     char instance_pid[50], last_exit_status[50], last_bg_pid[50];
@@ -158,6 +158,7 @@ char** eval(char* cmd, int* size)
 
 int run_cmd(int argc, char *argv[])
 {
+
 	char last_bg_pid[50], msg[50];
 	
 	if (argv[0] == NULL) 
@@ -296,8 +297,23 @@ int run_cmd(int argc, char *argv[])
 
 int run_external_cmd(char *argv[])
 {
+
 	pid_t child_pid;
 	int child_status;
+
+	/* Block SIGCHILD signals to avoid race conditions*/
+    if(sigemptyset(&mask) != 0) {
+        debug_message("sigemptyset error");
+        exit(-1);
+    }
+    if(sigaddset(&mask, SIGCHLD) != 0){
+        debug_message("sigaddset error");
+        exit(-1);
+    }
+    if(sigprocmask(SIG_BLOCK, &mask, NULL) != 0){
+        debug_message("sigprocmask error");
+        exit(-1);
+    }
 	
 	if (pipe_flag) 
 	{
@@ -312,9 +328,22 @@ int run_external_cmd(char *argv[])
 	
 		if(child_pid == 0) 
 		{
-			execvp(argv[0], argv);
-			printf("Unknown command\n");
-			exit(0);
+			  if(sigprocmask(SIG_UNBLOCK, &mask, NULL) != 0)
+			  {
+	          	debug_message("sigprocmask error");
+	          	exit(-1);
+	          }
+	          if(setpgid(0, 0) < 0) 
+	          {
+              	debug_message("setpgid error");
+              	exit(-1);
+              }
+	          if(execvp(argv[0], argv) < 0) 
+	          {
+	            printf("%s: Command not found\n", argv[0]);
+	            exit(1);
+              }
+
 		} 
 		else 
 		{
@@ -354,71 +383,76 @@ int run_external_cmd(char *argv[])
 
 int run_pipe_cmd(int argc, char* argv[])
 {
-	int i, size;
-	pid_t pid;
-	char **command;
-	int **pipes;
-	pipes = (int**)malloc(argc*sizeof(int*));
+    int status;
+    int i = 0;
+    int command = 0;
+    int size;
+    pid_t pid;
+    char ** parsed_cmd;
 
-	/* initialize pipes */
-	for(i=0;i<argc;i++)
-	{
-	    pipes[i] = (int*)malloc(2*sizeof(int));
-	}
-	
-	/* Create argc child processes. */
-	for (i = 0; i < argc; i ++) 
-	{
-		if (i < argc - 1) 
-		{
-			if ((pipe(pipes[i])) < 0) 
-			{
-				perror("Failed pipe setup.");
-			}
-		}
-		
-		if((pid = fork()) < 0) 
-		{
-			perror("Failed fork.");
-		}
-		
-		if (pid == 0) 
-		{			
-			command = eval(argv[i], &size);
-			
-			if (i == 0) 
-			{
-				close(pipes[i][0]);
-				dup2(pipes[i][1], STDOUT_FILENO);
-				close(pipes[i][1]);
-			} 
-			else if (i == argc - 1) 
-			{
-				close(pipes[i - 1][1]);
-				dup2(pipes[i - 1][0], STDIN_FILENO);
-				close(pipes[i - 1][0]);
-			} 
-			else 
-			{
-				close(pipes[i - 1][1]);
-				close(pipes[i][0]);
-				dup2(pipes[i - 1][0], STDIN_FILENO);
-				close(pipes[i - 1][0]);
-				dup2(pipes[i][1], STDOUT_FILENO);
-				close(pipes[i][1]);
-			}
-			pipe_flag = 1;
-			run_cmd(size, command);
-		}
-		else 
-		{
-			/* parent process*/
-			waitpid(pid, NULL, WNOHANG);
-		}
-	}
-	return 1;
+    int pipefds[2 * argc];
+    for(i = 0; i < argc; i++)
+    {
+        if(pipe(pipefds + i*2) < 0) 
+        {
+            perror("couldn't pipe");
+            exit(EXIT_FAILURE);
+        }
+    }
 
+    int j = 0;
+    while(command < argc) 
+    {
+    	parsed_cmd = eval(argv[command], &size);
+        pid = fork();
+        if(pid == 0) 
+        {
+            /*if not last command */
+            if(command < argc - 1)
+            {
+                if(dup2(pipefds[j + 1], 1) < 0)
+                {
+                    perror("dup2");
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            /*if not first command&& j!= 2*argc */
+            if(j != 0 )
+            {
+                if(dup2(pipefds[j-2], 0) < 0)
+                {
+                    perror(" dup2");/*j-2 0 j+1 1 */
+                    exit(EXIT_FAILURE);
+                }
+            }
+
+            for(i = 0; i < 2*argc; i++)
+            {
+                    close(pipefds[i]);
+            }
+
+            pipe_flag = 1;
+            run_cmd(size, parsed_cmd);
+        } 
+        else if(pid < 0)
+        {
+            perror("error");
+            exit(EXIT_FAILURE);
+        }
+        command++;
+        j+=2;
+    }
+    /**Parent closes the pipes and wait for children*/
+
+    for(i = 0; i < 2 * argc; i++){
+        close(pipefds[i]);
+    }
+
+    for(i = 0; i < argc + 1; i++)
+        wait(&status);
 }
+
 
 
 int run_file_script(FILE *script)
@@ -771,6 +805,7 @@ int repeat_cmd(int argc, char* argv[])
 		int size;
 		char* command = strdup(repeated_cmd);
 		char **args = eval(command, &size);
+		add_history(*args);
 		return run_cmd(size, args);
 	}
 	else
@@ -869,10 +904,25 @@ int show_help(int argc, char* argv[]){
 
 void sig_handler(int sig)
 {
+	char msg[100];
+	sprintf(msg, "Sending signal %d\n", sig);
 	if (!background) {
+		debug_message(msg);
 		kill(fg_pid, SIGINT);
 	}
 	return;
+}
+
+void sigchld_handler(int sig)
+{
+	int status;
+    pid_t pid = 1;
+
+    while (pid > 0)
+    {
+        pid = waitpid(-1, &status, WNOHANG|WUNTRACED);
+    }
+    return;
 }
 
 

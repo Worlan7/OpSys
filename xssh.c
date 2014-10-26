@@ -135,8 +135,10 @@ int main(int argc, char **argv)
         }
        
        /** TODO: Modify adding to history if input is repeat **/
-        if (strcmp(input, "repeat") != 0) 
+        if (strstr(input, "repeat") == NULL) 
+        {
             add_history(input);
+        }
         
         words = eval(input, &i);
         if (pipe_flag)
