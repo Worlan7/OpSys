@@ -699,19 +699,19 @@ int change_directory(int argc, char* argv[])
 	{
 		/* a path is provided, set the working directory. */
 		debug_message("Changing directory to given path");
-		setenv("PWD", argv[1], 1);
+		setenv("shell", argv[1], 1);
 	}
 	else if ((home_directory != NULL) && (argc == 1)) 
 	{
 		/* a path is not provided, set the working directory to be home directory.*/
 		debug_message("Changing directory to home directory");
-		setenv("PWD", home_directory, 1);
+		setenv("shell", home_directory, 1);
 	}
 	else if ((home_directory == NULL) && (argc == 1)) 
 	{
 		/* the home directory is not set, set the working directory to be home directory.*/
 		debug_message("Changing directory to root. Home directory undefined"); 
-		setenv("PWD", "/", 1);
+		setenv("shell", "/", 1);
 	}
 	else 
 	{
@@ -719,7 +719,7 @@ int change_directory(int argc, char* argv[])
 		return -1;
 	}
 	
-	chdir(getenv("PWD"));
+	chdir(getenv("shell"));
 	return 0;
 }
 
@@ -895,9 +895,20 @@ int wait_cmd(pid_t pid)
 
 
 int show_help(int argc, char* argv[]){
-	return 0;
-}
+	int c;
+	FILE *file;
+	file = fopen("readme", "r");
+	if (file) 
+	{
+    	while ((c = getc(file)) != EOF)
+        	putchar(c);
+        printf("\n");
 
+    	fclose(file);
+	}
+		return 0;
+
+}
 
 /*****************************
  * Signal Handling
@@ -920,11 +931,11 @@ void sigchld_handler(int sig)
 	int status;
     pid_t pid = 1;
 
-   /* while (pid > 0)
+    while (pid > 0)
     {
         pid = waitpid(-1, &status, WNOHANG|WUNTRACED);
     }
-    */
+    
     return;
 }
 
