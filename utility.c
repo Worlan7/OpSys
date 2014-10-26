@@ -155,7 +155,6 @@ char** eval(char* cmd, int* size)
 }
 
 
-
 int run_cmd(int argc, char *argv[])
 {
 
@@ -301,19 +300,17 @@ int run_external_cmd(char *argv[])
 	pid_t child_pid;
 	int child_status;
 
-	/* Block SIGCHILD signals to avoid race conditions*/
-    if(sigemptyset(&mask) != 0) {
-        debug_message("sigemptyset error");
-        exit(-1);
-    }
-    if(sigaddset(&mask, SIGCHLD) != 0){
-        debug_message("sigaddset error");
-        exit(-1);
-    }
-    if(sigprocmask(SIG_BLOCK, &mask, NULL) != 0){
-        debug_message("sigprocmask error");
-        exit(-1);
-    }
+	
+	if(sigprocmask(SIG_UNBLOCK, &mask, NULL) != 0)
+  	{
+  		debug_message("sigprocmask error");
+  		exit(-1);
+  	}
+  	if(setpgid(0, 0) < 0) 
+  	{
+  		debug_message("setpgid error");
+  		exit(-1);
+  	}
 	
 	if (pipe_flag) 
 	{
@@ -328,22 +325,25 @@ int run_external_cmd(char *argv[])
 	
 		if(child_pid == 0) 
 		{
-			  if(sigprocmask(SIG_UNBLOCK, &mask, NULL) != 0)
-			  {
-	          	debug_message("sigprocmask error");
-	          	exit(-1);
-	          }
-	          if(setpgid(0, 0) < 0) 
-	          {
-              	debug_message("setpgid error");
-              	exit(-1);
-              }
-	          if(execvp(argv[0], argv) < 0) 
-	          {
-	            printf("%s: Command not found\n", argv[0]);
-	            exit(1);
-              }
 
+          	/* Block SIGCHILD signals to avoid race conditions*/
+	    	if(sigemptyset(&mask) != 0) {
+	       		debug_message("sigemptyset error");
+	       	 	exit(-1);
+	    	}
+	    	if(sigaddset(&mask, SIGCHLD) != 0){
+	        	debug_message("sigaddset error");
+	        	exit(-1);
+	    	}
+	    	if(sigprocmask(SIG_BLOCK, &mask, NULL) != 0){
+	        	debug_message("sigprocmask error");
+	        	exit(-1);
+	    	}
+          	if(execvp(argv[0], argv) < 0) 
+          	{
+            	printf("%s: Command not found\n", argv[0]);
+            	exit(1);
+          	}
 		} 
 		else 
 		{
@@ -368,7 +368,7 @@ int run_external_cmd(char *argv[])
 			} 
 			else 
 			{
-				fg_pid = child_pid;
+				/*fg_pid = child_pid;*/
 				debug_message("Running command in foreground");
 				wait(&child_status);
 			}
@@ -454,7 +454,6 @@ int run_pipe_cmd(int argc, char* argv[])
 }
 
 
-
 int run_file_script(FILE *script)
 {
 	int scripting = 1;
@@ -525,6 +524,7 @@ char** var_substitute(char** argv, int argc)
 	
 	return argv;
 }
+
 
 void debug_message(char* message)
 {
@@ -807,7 +807,7 @@ int repeat_cmd(int argc, char* argv[])
 		int i = 0;
 		char* command = strdup(repeated_cmd);
 		char **args = eval(command, &size);
-			
+
 		add_history(repeated_cmd);
 		return run_cmd(size, args);
 	}
@@ -899,11 +899,9 @@ int show_help(int argc, char* argv[]){
 }
 
 
-
 /*****************************
  * Signal Handling
  *****************************/
-
 
 void sig_handler(int sig)
 {
@@ -916,18 +914,19 @@ void sig_handler(int sig)
 	return;
 }
 
+
 void sigchld_handler(int sig)
 {
 	int status;
     pid_t pid = 1;
 
-    while (pid > 0)
+   /* while (pid > 0)
     {
         pid = waitpid(-1, &status, WNOHANG|WUNTRACED);
     }
+    */
     return;
 }
-
 
 /*
  * Signal - wrapper for the sigaction function
