@@ -784,8 +784,9 @@ int repeat_cmd(int argc, char* argv[])
 	else if(argc == 2)
 	{
 		int cmd = atoi(argv[1]);
-		if(cmd >= i)
+		if(cmd > i)
 		{
+			fprintf(stderr, "history has %d\n", i);
 			debug_message("Number given to repeat too high");
 			return -1;
 		}
@@ -803,9 +804,11 @@ int repeat_cmd(int argc, char* argv[])
 	if(repeated_cmd)
 	{
 		int size;
+		int i = 0;
 		char* command = strdup(repeated_cmd);
 		char **args = eval(command, &size);
-		add_history(*args);
+			
+		add_history(repeated_cmd);
 		return run_cmd(size, args);
 	}
 	else
