@@ -178,6 +178,7 @@ int run_cmd(int argc, char *argv[])
 		sprintf(msg, "Program exited with exit status %d\n", cmd_exit_status);
 		printf("%s", msg);
 		exit_status = cmd_exit_status;
+		exit(0);
 		return 0;
 	}
 	else if (strcmp(argv[0], "clr") == 0)

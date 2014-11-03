@@ -3,6 +3,9 @@ Welcome to the XSSH Shell!
 The XSSH Shell is a simple toy shell that has certain builtin functions, along with the ability to execute some external ones.
 It is a toy shell in the sense that its behaviour is undefined for invalid input, so do take care while using it.
 
+
+
+BUILT IN COMMANDS
 This shell has the following built in commands:
 
 In the description below, W stands for a single word. A whitespace character (SPACE or TAB) or a
@@ -39,10 +42,12 @@ command (i.e., the one which currently has the highest history list number).
  kill [‐n] pid:  this command should send a signal to the specified process.
 
 
+FEATURES 
+
 This shell also supports the following:
 
 Input redirection using ">" and "<"
-Local variables
+Variable substitution
 Background commands
 
 
