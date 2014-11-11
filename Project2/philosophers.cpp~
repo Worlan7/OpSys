@@ -15,15 +15,14 @@
 
 
 int main(int argc, char **argv) 
-{	
+{
 	initialize(argc, argv, num_philosophers, drinking); 
 	int i, targ[num_philosophers];
-	std::string philosophers_a = "";
-	std::string philosophers_b = "";
+    std::string philosophers_a = "";
+    std::string philosophers_b = "";
 	pthread_t thread[num_philosophers];
-	sem_t newForks[num_philosophers];
-	Fork = newForks;
-
+    sem_t newForks[num_philosophers];
+    Fork = newForks;
 	for(i = 0; i < num_philosophers; i++){
 		//array(vector) showing philosopher state
 		activity.push_back(0);

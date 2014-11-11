@@ -2,5 +2,5 @@
 # Tutor: Professor Lawrence Miller
 
 philosophers: philosophers.cpp utility.cpp philosophers.h utility.h
-	g++ -Wall philosophers.cpp utility.cpp -o philosophers -lpthread
+	g++ -std=c++11 -Wall philosophers.cpp utility.cpp -o philosophers -lpthread
 

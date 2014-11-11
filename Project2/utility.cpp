@@ -27,14 +27,21 @@ void initialize(int argc, char **argv, int &num_philosophers, int &drinking)
 		drinking = 0;
 	}	
 
-	std::cout<< "Please enter number of philosophers. (2 - 15)" << std::endl;
-	std::cin >> num_philosophers;
-	std::cin.clear();
+    if(drinking != 1){
+	    std::cout<< "Please enter number of philosophers. (2 - 15)" << std::endl;
+	    std::cin >> num_philosophers;
+	    std::cin.clear();
 
-	if(num_philosophers < 2 || num_philosophers > 15){
-		std::cout << "invalid number of philosophers" << std::endl;
-		exit(-1);
-	}
+	    if(num_philosophers < 2 || num_philosophers > 15){
+		    std::cout << "invalid number of philosophers" << std::endl;
+		    exit(-1);
+    	}
+    }
+    else
+    {
+        num_philosophers = 5;
+        std::cout<< "lalala" << std::endl;
+    }
 
 }
 

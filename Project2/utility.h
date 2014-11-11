@@ -10,7 +10,9 @@
 #define UTIlITY_H
 
 #include <iostream>
-#include <String>
+#include <string>
+#include <limits>
+
 
 /* Global variables */
 /* End global variables */
