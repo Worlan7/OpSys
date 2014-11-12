@@ -39,14 +39,39 @@ void initialize(int argc, char **argv, int &num_philosophers, int &drinking)
     }
     else
     {
-        num_philosophers = 5;
-        std::cout<< "lalala" << std::endl;
+    	std::string args;
+   		std::cout<< "Please enter name of file containing philosopher matrix" << std::endl;
+	    std::cin >> args;
+
+    	std::ifstream ifs (args);
+		//check if file can be opened
+		if(ifs.is_open())
+		{	
+			/* Getting number of philosophers present in the file*/
+			num_philosophers = 0;
+			num_check = 0;
+			int bottle = 0;
+			std::string philosopher_line;
+			while (std::getline(ifs, unused) ){
+				std::string temp;
+				istringstream philosopher_set(philosopher_line);
+				bottle = num_philosophers;
+				while(philosopher_set >> temp)
+				{
+					
+
+				}
+			   ++num_philosophers;
+			}
+
+
+    	}
     }
 
 }
 
 
-void read_file(char **file)
+void read_matrix(char **file)
 {
 
 }

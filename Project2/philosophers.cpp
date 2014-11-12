@@ -80,7 +80,6 @@ int main(int argc, char **argv)
   		std::cout << "There are "  << num_philosophers<< std::endl;
   	}
 
-   
     
     return 0;
 }
@@ -97,7 +96,7 @@ void *tphilosopher(void *ptr)
     {
     	unsigned int loc = k;
     	int a = (k+1) % num_philosophers;
-       // think(loc);       this implementation makes philosophers start hungry. Easier printing
+        think(loc); 
         sem_wait(&access_activity);
         if(a < k){
         	sem_wait(&Fork[a]);
@@ -114,7 +113,6 @@ void *tphilosopher(void *ptr)
     	sem_post(&Fork[a]);
         sem_post(&Fork[k]);
         sem_post(&access_activity);
-        think(loc);
     }
     pthread_exit(0);
 }
@@ -124,29 +122,15 @@ void *tphilosopher(void *ptr)
 void eat(unsigned &k)
 {
 	activity[k] = 1;
-	std::string activities = "";
-	for(int i = 0; i < num_philosophers; i++){
-        unsigned p = i;
-
-		if(activity[p] == 1){
-		    activities += "*";
-        }
-		else
-		{
-            activities += " ";
-		}	
-		
-	}
-	printf("%s\n", activities.c_str());
+	dining_print();
 	sleep(rand() % 5 + 5);
     activity[k] = 0;
+    dining_print();
 
 }
 
-
-void think (unsigned &k)
+void dining_print()
 {
-	activity[k] = 0;
 	std::string activities;
 	for(int i = 0; i < num_philosophers; i++){
         unsigned p = i;
@@ -160,6 +144,10 @@ void think (unsigned &k)
 
 	}
 	printf("%s\n", activities.c_str());
+}
+
+void think (unsigned &k)
+{	
 	sleep(rand() % 20 + 5);
 }
 

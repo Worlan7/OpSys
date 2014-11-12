@@ -10,6 +10,8 @@
 #define UTIlITY_H
 
 #include <iostream>
+#include <sstream>
+#include <fstream>
 #include <string>
 #include <limits>
 
@@ -20,7 +22,9 @@
 
 /* Function prototypes */
 void initialize(int argc, char **argv, int &num_philosophers, int &drinking);
-void read_file(char **file);
+void read_matrix(char **file);
+
+
 
 
 
