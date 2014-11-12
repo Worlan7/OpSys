@@ -54,7 +54,7 @@ void initialize(int argc, char **argv, int &num_philosophers, int &drinking)
 			std::string philosopher_line;
 			while (std::getline(ifs, unused) ){
 				std::string temp;
-				istringstream philosopher_set(philosopher_line);
+				std::istringstream philosopher_set(philosopher_line);
 				bottle = num_philosophers;
 				while(philosopher_set >> temp)
 				{

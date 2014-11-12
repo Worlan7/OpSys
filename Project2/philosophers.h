@@ -29,8 +29,7 @@ sem_t *Fork;
 void *tphilosopher(void *ptr);
 void eat(unsigned &k);
 void think (unsigned &k);
-
-
+void dining_print();
 
 
 
