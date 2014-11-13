@@ -210,17 +210,17 @@ void drink(unsigned &k, std::vector<std::pair<int, int>> available_drinks)
 	std::vector<std::pair<int, int>> desired_drinks;	//drinks needed for session
 	int size = static_cast<int>(available_drinks.size());
 	int num_drinks = rand() % size + 1;
-	std::string append = std::string("Philosopher ") + k + ":" ;
+	std::string append = std::string("Philosopher ") + std::to_string(k) + ":" ;
 	// obtain a time-based seed:
   	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
  	std::shuffle (available_drinks.begin(), available_drinks.end(), std::default_random_engine(seed));
 
- 	std::string drinks_used = "bottles ";
+ 	std::string drinks_used = std::string("bottles ");
 
  	for(int i = 0; i < num_drinks; i++){
  		desired_drinks.push_back(available_drinks[i]);
- 		std::string bottle_string = std::string("(") + available_drinks[i].first + ", " +
- 									available_drinks[i].second + ")";
+ 		std::string bottle_string = std::string("(") + std::to_string(available_drinks[i].first) + ", " +
+ 									std::to_string(available_drinks[i]).second + ")";
  		drinks_used += bottle_string;
  	}
 
@@ -229,12 +229,12 @@ void drink(unsigned &k, std::vector<std::pair<int, int>> available_drinks)
  	for(int i = 0; i < num_drinks; i++){
  		sem_wait(&Bottle[desired_drinks[i].first][desired_drinks[i].second]);
  	}
- 	printf("%s drinking from %s \n", append, drinks_used);
+ 	printf("%s drinking from %s \n", append.c_str(), drinks_used.c_str());
  	sleep(rand() % 5 + 5);
  	for(int i = 0; i < num_drinks; i++){
  		sem_post(&Bottle[desired_drinks[i].first][desired_drinks[i].second]);
  	}
- 	printf("%s putting down %s \n", append, drinks_used);
+ 	printf("%s putting down %s \n", append.c_str(), drinks_used.c_str());
 
 
 }
