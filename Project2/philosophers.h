@@ -5,6 +5,10 @@
 * 	Email : elomworlanyo@wustl.edu 
 */
 
+
+#ifndef PHILOSOPHERS_H
+#define PHILOSOPHERS_H
+
 #include <stdio.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -12,16 +16,17 @@
 #include <stdlib.h>
 #include <vector>
 
-#ifndef PHILOSOPHERS_H
-#define PHILOSOPHERS_H
-
 /* Global variables */
 int eat_limit = 5; /* Number of times each philosopher tries to eat */
 int num_philosophers;
 std::vector<int> activity;  		
 int drinking;
+
 sem_t access_activity;
 sem_t *Fork;
+
+std::vector<std::vector<int>> BottleLocations;
+std::vector<std::vector<sem_t>>  Bottle;
 /* End global variables */
 
 

@@ -10,13 +10,13 @@
 * 	Email : elomworlanyo@wustl.edu 
 */
 
-#include "philosophers.h"
 #include "utility.h"
+#include "philosophers.h"
 
 
 int main(int argc, char **argv) 
 {	
-	initialize(argc, argv, num_philosophers, drinking); 
+	initialize(argc, argv, num_philosophers, drinking, BottleLocations); 
 	int i, targ[num_philosophers];
 	std::string philosophers_a = "";
 	std::string philosophers_b = "";
@@ -78,6 +78,8 @@ int main(int argc, char **argv)
   	{
   		std::cout << "You chose drinking philosophers" << std::endl;
   		std::cout << "There are "  << num_philosophers<< std::endl;
+  		
+
   	}
 
     
