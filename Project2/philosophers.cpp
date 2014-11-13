@@ -220,7 +220,7 @@ void drink(unsigned &k, std::vector<std::pair<int, int>> available_drinks)
  	for(int i = 0; i < num_drinks; i++){
  		desired_drinks.push_back(available_drinks[i]);
  		std::string bottle_string = std::string("(") + std::to_string(available_drinks[i].first) + ", " +
- 									std::to_string(available_drinks[i]).second + ")";
+ 									std::to_string(available_drinks[i].second) + ")";
  		drinks_used += bottle_string;
  	}
 
