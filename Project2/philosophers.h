@@ -34,6 +34,7 @@ std::vector<std::vector<sem_t>>  Bottle;
 void *dining_philosopher(void *ptr);
 void *drinking_philosopher(void *ptr);
 void eat(unsigned &k);
+void drink(unsigned &k, std::vector<std::pair<int, int>> available_drinks);
 void think (unsigned &k);
 void dining_print();
 

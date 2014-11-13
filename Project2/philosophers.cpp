@@ -160,9 +160,8 @@ void *drinking_philosopher(void *ptr)
 {
     int i, k = *((int *) ptr);
     std::vector<std::pair<int, int>> available_drinks;
-    std::vector<std::pair<int, int>> desired_drinks;
 
-
+    /* Get the drinks that a given philosopher may drink from*/
     for(i=0;i<num_philosophers;i++) 
     {
     	for(int j = 0; j < num_philosophers; j++)
@@ -175,7 +174,7 @@ void *drinking_philosopher(void *ptr)
     	} 
     }
 
-    for(i = 0; i < available_drinks.size(); i++)
+    for(size_t i = 0; i < available_drinks.size(); i++)
     {
     	printf("%d %d\n", available_drinks[i].first, available_drinks[i].second);
     }
@@ -186,7 +185,7 @@ void *drinking_philosopher(void *ptr)
     	unsigned int loc = k;
         think(loc); 
         sem_wait(&screen);
-		printf("Philosopher %d is drinking\n", k);
+        drink(k, available_drinks);
         sem_post(&screen);
     }
     pthread_exit(0);
@@ -203,6 +202,19 @@ void eat(unsigned &k)
     dining_print();
 
 }
+
+void drink(unsigned &k, std::vector<std::pair<int, int>> available_drinks)
+{
+	int num_drinks = rand() % 1 + static_cast<int>(available_drinks.size());
+	// obtain a time-based seed:
+  	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+ 	std::shuffle (available_drinks.begin(), available_drinks.end(), std::default_random_engine(seed));
+ 	for(int i = 0; i < num_drinks; i++){
+ 		std::cout << available_drinks[i].first << available_drinks[i].last << std::endl;
+ 	}
+
+}
+
 
 void dining_print()
 {
