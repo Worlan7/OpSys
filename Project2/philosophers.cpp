@@ -210,7 +210,7 @@ void drink(unsigned &k, std::vector<std::pair<int, int>> available_drinks)
 	std::vector<std::pair<int, int>> desired_drinks;	//drinks needed for session
 	int size = static_cast<int>(available_drinks.size());
 	int num_drinks = rand() % size + 1;
-	std::string append = "Philosopher " + k + ":" ;
+	std::string append = std::string("Philosopher ") + k + ":" ;
 	// obtain a time-based seed:
   	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
  	std::shuffle (available_drinks.begin(), available_drinks.end(), std::default_random_engine(seed));
@@ -219,7 +219,7 @@ void drink(unsigned &k, std::vector<std::pair<int, int>> available_drinks)
 
  	for(int i = 0; i < num_drinks; i++){
  		desired_drinks.push_back(available_drinks[i]);
- 		std::string bottle_string = "(" + available_drinks[i].first + ", " +
+ 		std::string bottle_string = std::string("(") + available_drinks[i].first + ", " +
  									available_drinks[i].second + ")";
  		drinks_used += bottle_string;
  	}
