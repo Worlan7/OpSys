@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 	    for(i=0;i<num_philosophers;i++) 
 	    {
 	        targ[i] = i;
-	        pthread_create(&thread[i], NULL, &tphilosopher,(void *) &targ[i]);
+	        pthread_create(&thread[i], NULL, &dining_philosopher,(void *) &targ[i]);
 	    }
 	    for(i=0;i<num_philosophers;i++) 
 	    {
@@ -78,7 +78,38 @@ int main(int argc, char **argv)
   	{
   		std::cout << "You chose drinking philosophers" << std::endl;
   		std::cout << "There are "  << num_philosophers<< std::endl;
-  		
+  		std::vector<std::vector<sem_t>> bottles(num_philosophers, std::vector<sem_t>(num_philosophers));
+  		Bottle = bottles;
+
+  		sem_init(&screen, 0, num_philosophers - 1);    
+  		for(i=0;i<num_philosophers;i++) 
+	    {
+	    	for(int j = 0; j < num_philosophers; j++){
+	    		if(BottleLocations[i][j] == 1){
+		    		if(sem_init(&Bottle[i][j], 0, 1) == 0){
+		    		}else{
+		    			printf("could not init semaphore\n");
+	                	exit(-1);
+		    		}
+		    	}
+	    	} 
+	    }
+
+	    for(i=0;i<num_philosophers;i++) 
+	    {
+	        targ[i] = i;
+	        pthread_create(&thread[i], NULL, &drinking_philosopher,(void *) &targ[i]);
+	    }
+	    for(i=0;i<num_philosophers;i++) 
+	    {
+	        pthread_join(thread[i], NULL);
+	    }
+	    for(i=0;i<num_philosophers;i++) 
+	    {
+	        sem_destroy(&Fork[i]);
+	    }
+	    sem_destroy(&access_activity);
+
 
   	}
 
@@ -90,7 +121,7 @@ int main(int argc, char **argv)
 
 
 
-void *tphilosopher(void *ptr) 
+void *dining_philosopher(void *ptr) 
 {
     int i, k = *((int *) ptr);
 
@@ -119,6 +150,11 @@ void *tphilosopher(void *ptr)
     pthread_exit(0);
 }
 
+
+void *drinking_philosopher(void *ptr)
+{
+	pthread_exit(0);	
+}
 
 
 void eat(unsigned &k)

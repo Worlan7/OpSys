@@ -22,7 +22,7 @@ int num_philosophers;
 std::vector<int> activity;  		
 int drinking;
 
-sem_t access_activity;
+sem_t access_activity, screen;
 sem_t *Fork;
 
 std::vector<std::vector<int>> BottleLocations;
@@ -31,7 +31,8 @@ std::vector<std::vector<sem_t>>  Bottle;
 
 
 /* Function prototypes */
-void *tphilosopher(void *ptr);
+void *dining_philosopher(void *ptr);
+void *drinking_philosopher(void *ptr);
 void eat(unsigned &k);
 void think (unsigned &k);
 void dining_print();
