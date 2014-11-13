@@ -97,17 +97,15 @@ void read_matrix(std::string file, int &num_philosophers, std::vector<std::vecto
 			printf("copacetic\n");
 			for(int i = 0; i < num_philosophers; i++){
 				for(int j = 0; j < num_philosophers; j++){
-					printf("%d ", BottleLocations[i][j]);
+					if((i == j) && BottleLocations[i][j] != 0){
+						printf("Philosopher cannot share bottle with himself");
+						exit(-1);
+					}
 				}
-				printf("\n");
 			}
 		}else{
-			for(int i = 0; i < num_philosophers; i++){
-				for(int j = 0; j < num_philosophers; j++){
-					printf("%d ", BottleLocations[i][j]);
-				}
-				printf("\n");
-			}
+			printf("Must be symmetric square matrix");
+			exit(-1);
 		}
     }
 }
