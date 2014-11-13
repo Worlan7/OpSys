@@ -158,7 +158,19 @@ void *dining_philosopher(void *ptr)
 
 void *drinking_philosopher(void *ptr)
 {
-	pthread_exit(0);	
+    int i, k = *((int *) ptr);
+
+    printf("this is philosopher %d \n", k);
+    for(i = 1; i <= eat_limit; i++) 
+    {
+    	unsigned int loc = k;
+        think(loc); 
+        sem_wait(&screen);
+		        
+        sem_post(&screen);
+    }
+    pthread_exit(0);
+
 }
 
 
