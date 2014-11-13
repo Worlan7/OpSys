@@ -166,7 +166,8 @@ void *drinking_philosopher(void *ptr)
     	unsigned int loc = k;
         think(loc); 
         sem_wait(&screen);
-		        
+		printf("Philosopher %d is drinking\n", k);
+
         sem_post(&screen);
     }
     pthread_exit(0);
