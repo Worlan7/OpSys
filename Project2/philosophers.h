@@ -15,6 +15,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <vector>
+#include <algorithm>
+#include <random>
+#include <chrono>
 
 /* Global variables */
 int eat_limit = 5; /* Number of times each philosopher tries to eat */
