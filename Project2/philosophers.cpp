@@ -159,6 +159,26 @@ void *dining_philosopher(void *ptr)
 void *drinking_philosopher(void *ptr)
 {
     int i, k = *((int *) ptr);
+    std::vector<std::pair<int, int>> available_drinks;
+    std::vector<std::pair<int, int>> desired_drinks;
+
+
+    for(i=0;i<num_philosophers;i++) 
+    {
+    	for(int j = 0; j < num_philosophers; j++)
+    	{
+    		if((i == k || j == k) && (BottleLocations[i][j] == 1))
+    		{
+    			std::pair<int, int> bottle = std::make_pair(i, j);
+    			available_drinks.push_back(bottle);
+    		}
+    	} 
+    }
+
+    for(i = 0; i < available_drinks.size(); i++)
+    {
+    	printf("%d %d\n", available_drinks[i].first, available_drinks[i].second);
+    }
 
     printf("this is philosopher %d \n", k);
     for(i = 1; i <= eat_limit; i++) 
@@ -167,7 +187,6 @@ void *drinking_philosopher(void *ptr)
         think(loc); 
         sem_wait(&screen);
 		printf("Philosopher %d is drinking\n", k);
-
         sem_post(&screen);
     }
     pthread_exit(0);
