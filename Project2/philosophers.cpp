@@ -186,7 +186,7 @@ void *drinking_philosopher(void *ptr)
         think(loc); 
         sem_wait(&screen);
         //account for possibility that philosopher has no drinks available
-        if(available_drinks.size() ! = 0)
+        if(available_drinks.size() != 0)
         	drink(loc, available_drinks);
         sem_post(&screen);
     }
@@ -223,6 +223,7 @@ void drink(unsigned &k, std::vector<std::pair<int, int>> available_drinks)
  		sem_wait(&Bottle[desired_drinks[i].first][desired_drinks[i].second]);
  	}
  	printf("drinking philosopher %d \n", k);
+ 	sleep(rand() % 5 + 5);
  	for(int i = 0; i < num_drinks; i++){
  		sem_post(&Bottle[desired_drinks[i].first][desired_drinks[i].second]);
  	}
