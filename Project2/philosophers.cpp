@@ -106,9 +106,18 @@ int main(int argc, char **argv)
 	    }
 	    for(i=0;i<num_philosophers;i++) 
 	    {
-	        sem_destroy(&Fork[i]);
-	    }
-	    sem_destroy(&access_activity);
+	    	for(int j = 0; j < num_philosophers; j++)
+	    	{
+	    		if(BottleLocations[i][j] == 1)
+	    		{
+		    		sem_destroy(&Bottle[i][j]);
+		    	}
+		    }
+	    } 
+	   	sem_destroy(&screen);
+
+	}
+
 
 
   	}
