@@ -20,13 +20,14 @@ int main(int argc, char **argv)
 	initialize(argc, argv, num_philosophers, drinking, BottleLocations); 
 	//used to identify philosophers
 	int i, targ[num_philosophers];
+	//philosopher threads
+	pthread_t thread[num_philosophers];
 	std::string philosophers_a = "";
 	std::string philosophers_b = "";
 
 	if(drinking == 0)
 	{
-		//thread and semaphores for dining philosophers
-		pthread_t thread[num_philosophers];
+		//semaphores for dining philosophers
 		sem_t newForks[num_philosophers];
 		Fork = newForks;
 
