@@ -1,0 +1,9 @@
+Elom Kwame Worlanyo
+
+README
+
+This program, "philosophers", is used to solve both the dining and drinking philosophers problems. These problems can be specified by user input to the program prompt. It is intended to be a deadlock and starvation free solution, and goes by the guidelines given in the project prompt.
+
+This particular program will only run on a UNIX or linux machine that implements sem_t. That is, it will not work on a mac, since although, there are declarations for sem_t, they (annoyingly) are not defined. This was actually a major source of frustration initially, as work was begun on a mac. Live and learn. 
+
+Only major deviation in approach was with the random nature in which a drinking philosopher would choose his set of drinks. Instead of using the algorithm suggested in the project, this program used std::shuffle with a time based seed to choose a random number, between 1 and size of available drinks, of drinks for a given philosopher to drink from. Further documentation in source code.

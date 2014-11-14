@@ -7,6 +7,13 @@
 
 #include "utility.h"
 
+/*
+*	initialize method is used to obtain the parameters for any given instance
+*	of the program. Uses user input to determine type of philosophers problem
+*	as well as number of philosophers and manner in which resources are 
+*	shared among them.
+*
+*/
 void initialize(int argc, char **argv, int &num_philosophers, int &drinking, std::vector<std::vector<int>> &BottleLocations)
 {
 	std::cout<< "Enter 1 for drinking philosophers. Defaults to dining " 
@@ -14,6 +21,7 @@ void initialize(int argc, char **argv, int &num_philosophers, int &drinking, std
 	
 	if(std::cin >> drinking)
 	{
+		//set drinking flag to differentiate between drinking or dining
 		if(drinking != 1)
 		{
 			drinking = 0;
@@ -22,6 +30,7 @@ void initialize(int argc, char **argv, int &num_philosophers, int &drinking, std
 	}
 	else
 	{
+		//flush to allow further input
 		std::cin.clear();
 		std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 		drinking = 0;
@@ -32,6 +41,7 @@ void initialize(int argc, char **argv, int &num_philosophers, int &drinking, std
 	    std::cin >> num_philosophers;
 	    std::cin.clear();
 
+	    //make sure number of philosophers is within project parameters
 	    if(num_philosophers < 2 || num_philosophers > 15){
 		    std::cout << "invalid number of philosophers" << std::endl;
 		    exit(-1);
@@ -43,12 +53,14 @@ void initialize(int argc, char **argv, int &num_philosophers, int &drinking, std
    		std::cout<< "Please enter name of file containing philosopher matrix" << std::endl;
 	    std::cin >> args;
 	    read_matrix(args, num_philosophers, BottleLocations);
-    	
     }
 
 }
 
-
+/*
+*	read_matrix used to obtain bottle locations from matrix stored in file.
+*
+*/
 void read_matrix(std::string file, int &num_philosophers, std::vector<std::vector<int>> &BottleLocations)
 {
 	std::ifstream ifs (file);
@@ -77,7 +89,8 @@ void read_matrix(std::string file, int &num_philosophers, std::vector<std::vecto
 		/*Putting bottles (and semaphores) in 2d array*/
 		std::vector<std::vector<int>> bottle_locations(num_philosophers, std::vector<int>(num_philosophers));
 		BottleLocations = bottle_locations;
-
+ 
+		//for each line(philosopher) check what bottles are present
 		while (std::getline(ifs, philosopher_line) ){
 			int col = 0;
 			std::istringstream philosopher_set(philosopher_line);
@@ -94,7 +107,7 @@ void read_matrix(std::string file, int &num_philosophers, std::vector<std::vecto
 
 
 		if(row == num_philosophers){ //num across = num vertical
-			printf("copacetic\n");
+			//check for valid matrix
 			for(int i = 0; i < num_philosophers; i++){
 				for(int j = 0; j < num_philosophers; j++){
 					if((i == j) && BottleLocations[i][j] != 0){

@@ -22,8 +22,8 @@
 /* Global variables */
 int eat_limit = 5; /* Number of times each philosopher tries to eat */
 int num_philosophers;
-std::vector<int> activity;  		
-int drinking;
+std::vector<int> activity;  //Array keeping track of philosopher state		
+int drinking;		//shows what type of problem program is solving
 
 sem_t access_activity, screen;
 sem_t *Fork;

@@ -16,25 +16,30 @@
 
 int main(int argc, char **argv) 
 {	
+	//Get user input to determine program function
 	initialize(argc, argv, num_philosophers, drinking, BottleLocations); 
+	//used to identify philosophers
 	int i, targ[num_philosophers];
 	std::string philosophers_a = "";
 	std::string philosophers_b = "";
-	pthread_t thread[num_philosophers];
-	sem_t newForks[num_philosophers];
-	Fork = newForks;
-
-	for(i = 0; i < num_philosophers; i++){
-		//array(vector) showing philosopher state
-		activity.push_back(0);
-	}
 
 	if(drinking == 0)
 	{
+		//thread and semaphores for dining philosophers
+		pthread_t thread[num_philosophers];
+		sem_t newForks[num_philosophers];
+		Fork = newForks;
+
+		for(i = 0; i < num_philosophers; i++){
+			//array(vector) showing philosopher state
+			activity.push_back(0);
+		}
+
   		std::cout << "You chose dining philosophers" << std::endl;
   		std::cout << "There are "  << num_philosophers 
   					<< " philosophers"<<std::endl;
 
+  		//Print out to identify philosophers by column
         for(i=0;i<num_philosophers;i++)
         {
             int print = i%10;
@@ -45,28 +50,34 @@ int main(int argc, char **argv)
             }
             philosophers_b += std::to_string(print);
         }
-        
         printf("%s\n%s\n", philosophers_a.c_str(), philosophers_b.c_str());
             
-	    sem_init(&access_activity, 0, num_philosophers - 1);    
-        
+        //initialising access_activity semaphore. Functions similar to Room
+        //semaphore discussed in class. If error exit.
+	    if(sem_init(&access_activity, 0, num_philosophers - 1) != 0){
+	    	printf("could not init access_activity semaphore\n");
+	    	exit(-1);
+	    }    
+        //Initialising semaphores on forks. If error exit
 	    for(i=0;i<num_philosophers;i++) 
 	    {
-	    	if(sem_init(&Fork[i], 0, 1) == 0){
-	    	}else{
-	    		printf("could not init semaphore\n");
+	    	if(sem_init(&Fork[i], 0, 1) != 0){
+	    		printf("could not init a Fork semaphore\n");
                 exit(-1);
-	    	} 
+	    	}
 	    }
+	    //Spawning off threads
 	    for(i=0;i<num_philosophers;i++) 
 	    {
 	        targ[i] = i;
 	        pthread_create(&thread[i], NULL, &dining_philosopher,(void *) &targ[i]);
 	    }
+	    //Making main process wait on children threads
 	    for(i=0;i<num_philosophers;i++) 
 	    {
 	        pthread_join(thread[i], NULL);
 	    }
+	    //Destroying semaphores once done
 	    for(i=0;i<num_philosophers;i++) 
 	    {
 	        sem_destroy(&Fork[i]);
@@ -78,16 +89,18 @@ int main(int argc, char **argv)
   	{
   		std::cout << "You chose drinking philosophers" << std::endl;
   		std::cout << "There are "  << num_philosophers<< std::endl;
+  		//2d vector mapping bottles to semaphores. Point global to initialized location
   		std::vector<std::vector<sem_t>> bottles(num_philosophers, std::vector<sem_t>(num_philosophers));
   		Bottle = bottles;
 
-  		sem_init(&screen, 0, num_philosophers - 1);    
+  		//Semaphore controlling screen access
+  		sem_init(&screen, 0, num_philosophers - 1);   
+  		//Initializing bottle semaphore if indicated by bottle location 
   		for(i=0;i<num_philosophers;i++) 
 	    {
 	    	for(int j = 0; j < num_philosophers; j++){
 	    		if(BottleLocations[i][j] == 1){
-		    		if(sem_init(&Bottle[i][j], 0, 1) == 0){
-		    		}else{
+		    		if(sem_init(&Bottle[i][j], 0, 1) != 0){
 		    			printf("could not init semaphore\n");
 	                	exit(-1);
 		    		}
@@ -95,6 +108,9 @@ int main(int argc, char **argv)
 	    	} 
 	    }
 
+	    /*
+	    * This block of code functions almost identically to dining philosophers above.
+	    */
 	    for(i=0;i<num_philosophers;i++) 
 	    {
 	        targ[i] = i;
@@ -115,27 +131,31 @@ int main(int argc, char **argv)
 
 	    sem_destroy(&screen);
 
-
-  	}
-
-    
+  	}    
     return 0;
 }
 
-
-
-
+/*
+*	Function called by a dining philosopher thread. This function allows a 
+*	philosopher to eat without deadlocks or starvation, by preventing circular
+*	wait. Use of access_activity to prevent further race conditions.
+*
+*/
 
 void *dining_philosopher(void *ptr) 
 {
+	//int k identifies philosopher thread by number
     int i, k = *((int *) ptr);
 
+    //eat limit is number of times philosopher eats before program ends
     for(i = 1; i <= eat_limit; i++) 
     {
     	unsigned int loc = k;
     	int a = (k+1) % num_philosophers;
+    	//calling think function, which functionally pauses the thread
         think(loc); 
         sem_wait(&access_activity);
+        //making wait order different prevents circular wait.
         if(a < k){
         	sem_wait(&Fork[a]);
         	sem_wait(&Fork[k]);
@@ -155,6 +175,11 @@ void *dining_philosopher(void *ptr)
     pthread_exit(0);
 }
 
+/*
+*	Function called by a drinking philosopher thread. This function allows a 
+*	philosopher to drink without deadlocks or starvation.
+*
+*/
 
 void *drinking_philosopher(void *ptr)
 {
@@ -174,12 +199,7 @@ void *drinking_philosopher(void *ptr)
     	} 
     }
 
-    for(size_t i = 0; i < available_drinks.size(); i++)
-    {
-    	printf("%d %d\n", available_drinks[i].first, available_drinks[i].second);
-    }
-
-    printf("this is philosopher %d \n", k);
+    //eat_limit is functionally drink limit, number of times philosopher drinks
     for(i = 1; i <= eat_limit; i++) 
     {
     	unsigned int loc = k;
@@ -188,13 +208,18 @@ void *drinking_philosopher(void *ptr)
         //account for possibility that philosopher has no drinks available
         if(available_drinks.size() != 0)
         	drink(loc, available_drinks);
+
         sem_post(&screen);
     }
     pthread_exit(0);
-
 }
 
 
+/*
+*
+*	Function to simulate eating. Sleeps between 5 and 10 seconds and prints out
+*	status
+*/
 void eat(unsigned &k)
 {
 	activity[k] = 1;
@@ -205,18 +230,29 @@ void eat(unsigned &k)
 
 }
 
+
+/*
+*
+*	Function to simulate drinking. Sleeps between 5 and 10 seconds and prints out
+*	status. This function uses std::shuffle to obtain a random group of drinks
+*	per session for any given philosopher.
+*/
+
 void drink(unsigned &k, std::vector<std::pair<int, int>> available_drinks)
 {
 	std::vector<std::pair<int, int>> desired_drinks;	//drinks needed for session
-	int size = static_cast<int>(available_drinks.size());
-	int num_drinks = rand() % size + 1;
-	std::string append = std::string("Philosopher ") + std::to_string(k) + ":" ;
-	// obtain a time-based seed:
+	int size = static_cast<int>(available_drinks.size());	//number of drinks available to philosopher
+	int num_drinks = rand() % size + 1;		//number of drinks philosopher needs per session
+
+	//Strings used to form output
+	std::string append = std::string("Philosopher ") + std::to_string(k) + ":" ; 
+	std::string drinks_used = std::string("bottles ");
+
+	//obtain a time-based seed:
   	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
  	std::shuffle (available_drinks.begin(), available_drinks.end(), std::default_random_engine(seed));
 
- 	std::string drinks_used = std::string("bottles ");
-
+ 	//Form textual representation of drinks required by philosopher
  	for(int i = 0; i < num_drinks; i++){
  		desired_drinks.push_back(available_drinks[i]);
  		std::string bottle_string = std::string("(") + std::to_string(available_drinks[i].first) + ", " +
@@ -224,21 +260,29 @@ void drink(unsigned &k, std::vector<std::pair<int, int>> available_drinks)
  		drinks_used += bottle_string;
  	}
 
+ 	//sort required drinks to ensure philosopher waits from lowest up.
  	std::sort(desired_drinks.begin(), desired_drinks.end());
 
+ 	//waiting on relevant semaphores
  	for(int i = 0; i < num_drinks; i++){
  		sem_wait(&Bottle[desired_drinks[i].first][desired_drinks[i].second]);
  	}
+ 	//print prompt
  	printf("%s drinking from %s \n", append.c_str(), drinks_used.c_str());
+ 	//drink simulation
  	sleep(rand() % 5 + 5);
+ 	//drop semaphores
  	for(int i = 0; i < num_drinks; i++){
  		sem_post(&Bottle[desired_drinks[i].first][desired_drinks[i].second]);
  	}
+ 	//update on status
  	printf("%s putting down %s \n", append.c_str(), drinks_used.c_str());
-
-
 }
 
+/*
+*
+*	Helper function to textually represent state of philosophers
+*/
 
 void dining_print()
 {
@@ -257,6 +301,9 @@ void dining_print()
 	printf("%s\n", activities.c_str());
 }
 
+/*
+* Helper function to simulate thinking. Thinks between 5 and 25 seconds
+*/
 void think (unsigned &k)
 {	
 	sleep(rand() % 20 + 5);
