@@ -1,0 +1,5 @@
+set foo "bar"
+set bar "foo"
+set file "A-Trip-To-Mars.txt"
+/bin/cat $file > out2.txt
+exit 3

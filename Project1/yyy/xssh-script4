@@ -1,0 +1,5 @@
+set foo "bar"
+set bar "foo"
+export foo
+/bin/printenv > out3.txt
+exit 4
