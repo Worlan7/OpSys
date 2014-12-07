@@ -8,4 +8,16 @@
 *
 */
 
+#include <string>
+#include <iostream>
+#include <random>
+#include <fstream>
+#include <vector>
+
+
+//Helper function
+void usage(void);
+bool legal_int(char *str);
+
+
 

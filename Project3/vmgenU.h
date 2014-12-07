@@ -8,4 +8,12 @@
 *
 */
 
+#include <string>
+#include <iostream>
+#include <random>
+#include <fstream>
 
+
+//Helper functions
+void usage(void);
+bool legal_int(char *str);
