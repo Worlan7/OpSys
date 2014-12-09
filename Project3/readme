@@ -1,0 +1,119 @@
+/*
+*
+* Project 3 -  a simple program that simulates virtual memory page replacement
+* algorithms 
+*
+* Name : Elom Kwame Worlanyo
+* Email : elomworlanyo@wustl.edu 
+*
+*/
+
+
+This project mainly deals with 4 memory page replacement algorithms: 
+
+A) Optimum Page Replacement Algorithm
+	In the case of a page fault, replaces the page that is farthest away from 
+	being referenced.
+
+B) Least Recently Used Page Replacement Algorithm
+	In the case of a page fault, replaces the page that is the least recently
+	used.
+
+C) First-in-First-out (FIFO) Page Replacement Algorithm
+	In the case of a page fault, replaces the oldest page ni the physical 
+	memory table.
+
+D) Clock Page Replacement Algorithm
+	In the case of a page fault, loops through a circular list of page 
+	references, from the location currently being pointed to, and replaces
+	the first page with a use bit of 0.
+
+These replacement algorithms are implemented in vmsim, with some helper 
+functions located in utility.
+
+vmsim accepts three command-line arguments in the following order:
+o (a) the total number of physical memory frames (maximum 100),
+o (b) an input filename where a sequence of page references is stored,
+o (c) the chosen algorithm (OPT, LRU, FIFO, or CLOCK). 
+If vmsim is run with the wrong arguments or no
+arguments, it prints out usage instructions and exit.
+The format of the input file must be a simple ASCII sequence of integers in
+the range 0 to 99 separated by spaces, for example: 51 7 34 0 8 45 21.
+vmsim will first read all the memory references from the input file and store
+them in a local array. Then, it will play back these references one by one and 
+print out for each reference the current allocation state of physical memory 
+frames in the following format:
+
+34: [51| 7|34| | ] 
+
+Each page fault is denoted by a character F two spaces to the end of ']'. e.g:
+
+45: [45| 7|34| 0| 8]  F 
+
+After processing all the memory references, vmsim prints the total number of
+page faults and the miss rate (page faults divided by number of references).
+This is the format of the output:
+
+Miss rate = 237 / 997 = 23.78% 
+
+The percentage is always to 2 decimal places in this implementation.
+
+
+
+
+In addition to vmsim, 2 number generators were also written for the project.
+These were:
+
+A)vmgenU
+	vmgenU accepts three command-line arguments in the following order: 
+		(a) the range of page references (maximum 100)
+		(b) the length of the sequence of page references
+		(c) the name of the file that will be generated. 
+	
+	If vmgenU is run with the wrong arguments or no arguments, it prints out 
+	usage instructions and exits. 
+
+	Example input:
+		>vmgenU 10 200 vmrefs.dat
+
+	vmgenU will then generate a sequence of page references of the desired 
+	length containing random page numbers uniformly drawn between 0 and the
+	range minus one (i.e., 200 page numbers between 0 and 9 in the example above)
+	vmgenU must write this sequence into the file given as input. 
+
+B)vmgenWS
+	vmgenWS accepts five command-line arguments in the following order: 
+	(a) ws_size:
+		the size of the working set
+	(b) LB:
+		the lower bound on the number of pages to generate in a
+		given working set exhibiting locality of reference
+	(c) UB:
+		the upper bound on the number of pages to generate in a given working 
+		set exhibiting locality of reference 
+	(d) the range of page references (maximum 100)
+	(e) the length of the sequence of page references
+	(f) the name of the file that will be generated. 
+	
+	If vmgenWS is run with the wrong arguments or no arguments, it should print 
+	out usage instructions and exit.
+
+	Example input:
+		>vmgenWS 5 8 15 25 200 vmrefs.dat
+
+	vmgenWS will then generate a sequence of page references of the desired 
+	length containing random page numbers generated as follows:
+
+	1.  generate num_gen – randomly generate a number between 8 (LB) and 15
+		(UB).
+	2.  generate 5 (ws_size) page reference numbers in range 0 to 25
+	3.  randomly generate num_gen of page references from the set of page
+		references found in 2 (i.e., if num_gen is 12, we would generate 12 numbers
+		from the set of 5 numbers from step 2).
+	4. 	repeat steps 1-3 until 200 (num) page references have been generated. 
+		vmgenWS must write this sequence into the file given as input.
+
+	
+
+
+

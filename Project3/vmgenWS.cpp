@@ -62,12 +62,12 @@ int main(int argc, char **argv)
 			//Uniform number generation
 			std::random_device rand_dev;
     		std::mt19937 generator(rand_dev());
-    		std::uniform_int_distribution<int>  distr(range_from, range_to);
+    		std::uniform_int_distribution<int>  distr(range_from, range_to - 1);
 
-    		while(page_references.size() < length)
+    		while(static_cast<int>(page_references.size()) < length)
     		{
     			std::vector<int> working_set;
-	    		num_gen = rand() % (upper_bound - lower_bound + 1) + lower_bound;
+	    		num_gen = rand()%(upper_bound - lower_bound + 1) + lower_bound;
 
 	    		for(int i = 0; i < ws_size; ++i)
 	    		{
@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 	    		for(int i = 0; i < num_gen; ++i)
 	    		{
 	    			int loc = rand() % ws_size;
-	    			if(page_references.size() < length)
+	    			if(static_cast<int>(page_references.size()) < length)
 	    			{
 	    				page_references.push_back(working_set[loc]);
 	    			}else{

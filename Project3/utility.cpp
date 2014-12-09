@@ -17,10 +17,10 @@
  */
 void usage(void) 
 {
-    std::cout<< "Usage: vmsim| num_frames| output_file| algorithm" << std::endl;
+    std::cout<< "Usage: vmsim| num_frames| input_file| algorithm" << std::endl;
     std::cout<< "       num_frames  -> (max 100)" << std::endl;
     std::cout<< "       total number of physical memory frames" << std::endl;
-    std::cout<< "       output_file -> name of output file" << std::endl;
+    std::cout<< "       input_file -> name of input file" << std::endl;
     std::cout<< "       algorithm  -> page replacement algorithm" << std::endl;
     std::cout<< "       'OPT', 'CLOCK', 'LRU', 'FIFO' case-insens" << std::endl;
     exit(1);
@@ -72,6 +72,11 @@ std::vector<int> read_input(std::string input_file)
 				usage();
 			}
 			page = atoi(temp.c_str());
+
+			if(page >= 100){
+				std::cout << "Invalid int in input file" << std::endl;
+				usage();
+			}
 			mem_references.push_back(page);
 		}
 
@@ -94,7 +99,11 @@ void print_references(int page, std::vector<int> references, bool fault)
 {
 	std::string out;
 
-	std::cout << page << ": ";
+	if(page < 10)
+		std::cout << " " << page << ": ";
+	else
+		std::cout << page << ": ";
+
 	for(size_t i = 0; i < references.size(); ++i )
 	{	
 		//Formatting
@@ -126,7 +135,7 @@ void print_references(int page, std::vector<int> references, bool fault)
 
 	if(fault)
 	{
-		std::cout << "] F" << std::endl;
+		std::cout << "]  F" << std::endl;
 	}
 	else
 	{
@@ -141,7 +150,8 @@ void print_references(int page, std::vector<int> references, bool fault)
 *
 */
 
-int furthest_away(size_t index, std::vector<int> physical, std::vector<int> mem_references)
+int furthest_away(size_t index, std::vector<int> physical, 
+	std::vector<int> mem_references)
 {
 	int max_distance = 0;
 	int current_furthest;

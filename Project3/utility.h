@@ -26,6 +26,7 @@ void usage(void);
 bool legal_int(char *str);
 std::vector<int> read_input(std::string input_file);
 void print_references(int page, std::vector<int> references, bool fault);
-int furthest_away(size_t index, std::vector<int> physical, std::vector<int> mem_references);
+int furthest_away(size_t index, std::vector<int> physical, 
+	std::vector<int> mem_references);
 
 #endif
